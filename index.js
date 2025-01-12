@@ -157,7 +157,7 @@ app.get('/auth/callback', (req, res) => {
 
 // Profile route to display authenticated user info
 app.get('/profile', async (req, res) => {
-  const accessToken = req.query.accessToken;
+  const accessTokenx = req.query.accessToken;
 
   if (!accessToken) {
     return res.status(400).send('No access token found');
@@ -167,7 +167,7 @@ app.get('/profile', async (req, res) => {
     // Fetch user profile information using the access token
     const userResponse = await axios.get('https://api.github.com/user', {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessTokenx}`,
       },
     });
 
