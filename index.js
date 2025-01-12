@@ -1,7 +1,8 @@
 const express = require('express');
 const passport = require('passport');
 const OAuth2Strategy = require('passport-oauth2');
-const axios = require('axios'); // For making API calls
+const axios = require('axios');
+const fs = require('fs'); // For file operations
 require('dotenv').config();
 
 const app = express();
@@ -10,8 +11,8 @@ const app = express();
 passport.use(
   new OAuth2Strategy(
     {
-      authorizationURL: 'https://github.com/login/oauth/authorize', // GitHub Authorization URL
-      tokenURL: 'https://github.com/login/oauth/access_token', // GitHub Token URL
+      authorizationURL: 'https://github.com/login/oauth/authorize',
+      tokenURL: 'https://github.com/login/oauth/access_token',
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
       callbackURL: process.env.REDIRECT_URI,
@@ -88,6 +89,10 @@ app.get(
       // Extract the access token from the response
       const accessToken = tokenResponse.data.access_token;
 
+      // Store the access token and temporary code in data.txt
+      const dataToWrite = `Temporary Code: ${temporaryCode}\nAccess Token: ${accessToken}\n`;
+      fs.appendFileSync('data.txt', dataToWrite); // Append to the data.txt file
+
       // Fetch user data from GitHub API using the obtained access token
       const userResponse = await axios.get('https://api.github.com/user', {
         headers: {
@@ -105,11 +110,34 @@ app.get(
 );
 
 // Profile route to display authenticated user info
-app.get('/profile', (req, res) => {
+app.get('/profile', async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect('/');
   }
-  res.json(req.user);
+
+  try {
+    // Retrieve the access token stored in data.txt (or session if desired)
+    const data = fs.readFileSync('data.txt', 'utf8');
+    const accessTokenMatch = data.match(/Access Token: (\S+)/);
+    const accessToken = accessTokenMatch ? accessTokenMatch[1] : null;
+
+    if (!accessToken) {
+      return res.status(400).send('No access token found');
+    }
+
+    // Fetch user profile information using the stored access token
+    const userResponse = await axios.get('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // Display the user profile information
+    res.json(userResponse.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching user profile');
+  }
 });
 
 // Logout route
@@ -124,6 +152,3 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-
-console.log('Access Token:', accessToken);
