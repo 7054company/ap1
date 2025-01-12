@@ -71,16 +71,25 @@ app.get(
   passport.authenticate('oauth2', { failureRedirect: '/' }),
   async (req, res) => {
     try {
+      // Prepare the request to exchange the code for an access token
+      const requestData = {
+        client_id: process.env.CLIENT_ID,
+        client_secret: process.env.CLIENT_SECRET,
+        code: temporaryCode,
+      };
+
+      const requestUrl = 'https://github.com/login/oauth/access_token';
+      
+      // Log the request URL and data for debugging
+      console.log('Request URL:', requestUrl);
+      console.log('Request Data:', requestData);
+
       // Exchange the code for an access token using GitHub's token URL
       const tokenResponse = await axios.post(
-        'https://github.com/login/oauth/access_token',
+        requestUrl,
         null,
         {
-          params: {
-            client_id: process.env.CLIENT_ID,
-            client_secret: process.env.CLIENT_SECRET,
-            code: temporaryCode,
-          },
+          params: requestData,
           headers: {
             Accept: 'application/json',
           },
@@ -93,14 +102,19 @@ app.get(
       // Check if the access token is present in the response
       const accessToken = tokenResponse.data.access_token;
 
-      // If no access token, log an error and display it on the page
+      // If no access token, log an error and display it on the page with request data
       if (!accessToken) {
         console.error('Access token not received');
+
         return res.send(`
           <html>
             <body>
               <h1>Error: Access token not received</h1>
-              <pre>${JSON.stringify(tokenResponse.data, null, 2)}</pre>
+              <pre>
+                Request URL: ${requestUrl}
+                Request Data: ${JSON.stringify(requestData, null, 2)}
+                Response: ${JSON.stringify(tokenResponse.data, null, 2)}
+              </pre>
             </body>
           </html>
         `);
@@ -128,6 +142,7 @@ app.get(
     }
   }
 );
+
 
 
 // Profile route to display authenticated user info
