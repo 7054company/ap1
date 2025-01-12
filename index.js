@@ -140,7 +140,7 @@ app.get('/auth/callback', (req, res) => {
     method: 'post',
     // to the Github authentication API, with the client ID, client secret
     // and request token
-    url: `https://github.com/login/oauth/access_token?client_id=${clientID}&client_secret=${clientSecret}&code=${requestToken}`,
+    url: `https://github.com/login/oauth/access_token?client_id=Ov23liDrVAJajOOviu2C&client_secret=6b368a2183d02483669632ed92e36a04c3284c49&code=${requestToken}`,
     // Set the content type header, so that we get the response in JSOn
     headers: {
       accept: 'application/json'
