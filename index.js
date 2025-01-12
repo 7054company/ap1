@@ -89,18 +89,8 @@ app.get(
       // Extract the access token from the response
       const accessToken = tokenResponse.data.access_token;
 
-      // Send the access token to the frontend to store in localStorage
-      res.send(`
-        <html>
-          <body>
-            <script>
-              localStorage.setItem('accessToken', '${accessToken}');
-              window.location.href = '/profile'; // Redirect to the profile page
-            </script>
-          </body>
-        </html>
-      `);
-
+      // Redirect to /profile with the access token as a query parameter
+      res.redirect(`/profile?accessToken=${accessToken}`);
     } catch (error) {
       console.error(error);
       res.redirect('/'); // Redirect in case of an error
@@ -110,15 +100,15 @@ app.get(
 
 // Profile route to display authenticated user info
 app.get('/profile', async (req, res) => {
-  // Retrieve the access token from the query or localStorage
-  const accessToken = req.query.accessToken || req.cookies.accessToken; // Use the token sent from client-side or session/cookies
+  // Retrieve the access token from the query parameter
+  const accessToken = req.query.accessToken;
 
   if (!accessToken) {
     return res.status(400).send('No access token found');
   }
 
   try {
-    // Fetch user profile information using the stored access token
+    // Fetch user profile information using the access token
     const userResponse = await axios.get('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
