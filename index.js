@@ -159,7 +159,7 @@ app.get('/auth/callback', (req, res) => {
 app.get('/profile', async (req, res) => {
   const accessTokenx = req.query.accessToken;
 
-  if (!accessToken) {
+  if (!accessTokenx) {
     return res.status(400).send('No access token found');
   }
 
