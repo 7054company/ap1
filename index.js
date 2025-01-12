@@ -19,6 +19,9 @@ passport.use(
       callbackURL: process.env.REDIRECT_URI,
     },
     function (accessToken, refreshToken, profile, done) {
+      if (!accessToken) {
+        return done(new Error('Access token is missing'));
+      }
       return done(null, { accessToken, profile });
     }
   )
@@ -76,9 +79,14 @@ app.get(
 
       const accessToken = tokenResponse.data.access_token;
 
+      if (!accessToken) {
+        return res.status(400).send('Access token is missing');
+      }
+
       // Write the token to a file in the tmp directory
       const tokenPath = path.join('/tmp', 'data.txt');
       fs.writeFileSync(tokenPath, accessToken);
+      console.log('Access Token successfully written to /tmp/data.txt');
 
       // Fetch user data from GitHub API
       const userResponse = await axios.get('https://api.github.com/user', {
@@ -89,7 +97,7 @@ app.get(
 
       res.json(userResponse.data);
     } catch (error) {
-      console.error(error);
+      console.error('Error during GitHub OAuth callback:', error);
       res.redirect('/');
     }
   }
@@ -108,6 +116,9 @@ app.get('/profile', (req, res) => {
   }
 
   const accessToken = fs.readFileSync(tokenPath, 'utf-8');
+  if (!accessToken) {
+    return res.status(400).send('Access token is missing');
+  }
 
   // Fetch user data from GitHub API
   axios.get('https://api.github.com/user', {
@@ -117,7 +128,7 @@ app.get('/profile', (req, res) => {
   })
   .then(userResponse => res.json(userResponse.data))
   .catch(error => {
-    console.error(error);
+    console.error('Error fetching user profile:', error);
     res.status(500).send('Error fetching user profile');
   });
 });
