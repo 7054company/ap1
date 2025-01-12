@@ -2,7 +2,6 @@ const express = require('express');
 const passport = require('passport');
 const OAuth2Strategy = require('passport-oauth2');
 const axios = require('axios');
-const fs = require('fs'); // For file operations
 require('dotenv').config();
 
 const app = express();
@@ -71,7 +70,7 @@ app.get(
   passport.authenticate('oauth2', { failureRedirect: '/' }),
   async (req, res) => {
     try {
-      // Prepare the request to exchange the code for an access token
+      // Prepare data for request to GitHub OAuth access token URL
       const requestData = {
         client_id: process.env.CLIENT_ID,
         client_secret: process.env.CLIENT_SECRET,
@@ -79,22 +78,16 @@ app.get(
       };
 
       const requestUrl = 'https://github.com/login/oauth/access_token';
-      
-      // Log the request URL and data for debugging
       console.log('Request URL:', requestUrl);
       console.log('Request Data:', requestData);
 
       // Exchange the code for an access token using GitHub's token URL
-      const tokenResponse = await axios.post(
-        requestUrl,
-        null,
-        {
-          params: requestData,
-          headers: {
-            Accept: 'application/json',
-          },
-        }
-      );
+      const tokenResponse = await axios.post(requestUrl, null, {
+        params: requestData,
+        headers: {
+          Accept: 'application/json',
+        },
+      });
 
       // Log the response to the console for debugging
       console.log('Token Response:', tokenResponse.data);
@@ -102,10 +95,9 @@ app.get(
       // Check if the access token is present in the response
       const accessToken = tokenResponse.data.access_token;
 
-      // If no access token, log an error and display it on the page with request data
+      // If no access token, log an error and display it on the page
       if (!accessToken) {
         console.error('Access token not received');
-
         return res.send(`
           <html>
             <body>
@@ -143,11 +135,8 @@ app.get(
   }
 );
 
-
-
 // Profile route to display authenticated user info
 app.get('/profile', async (req, res) => {
-  // Retrieve the access token from the query parameter
   const accessToken = req.query.accessToken;
 
   if (!accessToken) {
