@@ -109,7 +109,7 @@ app.get('/auth/callback', passport.authenticate('oauth2', { failureRedirect: '/'
     }
 
     // Redirect to profile page with the access token
-    res.redirect(`/profile?access_token=${accessToken}`);
+    res.redirect(`/profile?access_tokenx=${accessToken}`);
   } catch (error) {
     console.error('Error during token exchange:', error);
     res.redirect('/'); // Redirect in case of an error
@@ -118,7 +118,7 @@ app.get('/auth/callback', passport.authenticate('oauth2', { failureRedirect: '/'
 
 // Profile route to display authenticated user info
 app.get('/profile', async (req, res) => {
-  const accessTokenx = req.query.access_token;
+  const accessTokenx = req.query.access_tokenx;
 
   if (!accessTokenx) {
     return res.status(400).send('No access token found');
