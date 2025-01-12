@@ -38,9 +38,6 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Define a temporary storage for the code received in the callback
-let temporaryCode = '';
-
 // Routes
 app.get('/', (req, res) => {
   res.send('<a href="/auth">Log in with GitHub</a>');
@@ -55,21 +52,18 @@ app.get(
 // Callback route where GitHub redirects after user login
 app.get(
   '/auth/callback',
-  async (req, res, next) => {
-    temporaryCode = req.query.code;
-
-    if (!temporaryCode) {
-      console.error('No authorization code received');
-      return res.status(400).send('No code received');
-    }
-
-    console.log('Received authorization code:', temporaryCode);
-
-    next();
-  },
   passport.authenticate('oauth2', { failureRedirect: '/' }),
   async (req, res) => {
     try {
+      const temporaryCode = req.query.code; // Extract the code directly from the URL
+
+      if (!temporaryCode) {
+        console.error('No authorization code received');
+        return res.status(400).send('No code received');
+      }
+
+      console.log('Received authorization code:', temporaryCode);
+
       // Prepare data for request to GitHub OAuth access token URL
       const requestData = {
         client_id: process.env.CLIENT_ID,
