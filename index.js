@@ -91,6 +91,48 @@ app.get('/profile', async (req, res) => {
   }
 });
 
+
+
+
+
+
+app.get('/profile1', async (req, res) => {
+  const accessToken = req.query.access_token;
+
+  if (!accessToken) {
+    return res.status(400).send('No access token found');
+  }
+
+  try {
+    // Fetch user profile information using the access token
+    const userResponse = await axios.get('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // Fetch the user's email information from GitHub's API
+    const emailResponse = await axios.get('https://api.github.com/user/emails', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // Extract the primary email from the email response
+    const primaryEmail = emailResponse.data.find(email => email.primary).email;
+
+    // Display the user profile information along with the email
+    res.json({
+      user: userResponse.data,
+      email: primaryEmail,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching user profile or email');
+  }
+});
+
+
 // Logout route
 app.get('/logout', (req, res) => {
   req.logout(() => {
