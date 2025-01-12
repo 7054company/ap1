@@ -57,14 +57,12 @@ app.get(
 app.get(
   '/auth/callback',
   async (req, res, next) => {
-    // Capture the code from the query parameters
     temporaryCode = req.query.code;
 
     if (!temporaryCode) {
       return res.status(400).send('No code received');
     }
 
-    // Proceed to the OAuth2 token exchange
     next();
   },
   passport.authenticate('oauth2', { failureRedirect: '/' }),
@@ -78,7 +76,7 @@ app.get(
           params: {
             client_id: process.env.CLIENT_ID,
             client_secret: process.env.CLIENT_SECRET,
-            code: temporaryCode, // Use the code saved in memory
+            code: temporaryCode,
           },
           headers: {
             Accept: 'application/json',
@@ -86,11 +84,41 @@ app.get(
         }
       );
 
-      // Extract the access token from the response
+      // Log the response to the console for debugging
+      console.log('Token Response:', tokenResponse.data);
+
+      // Check if the access token is present in the response
       const accessToken = tokenResponse.data.access_token;
 
-      // Redirect to /profile with the access token as a query parameter
-      res.redirect(`/profile?accessToken=${accessToken}`);
+      // If no access token, log an error and display it on the page
+      if (!accessToken) {
+        console.error('Access token not received');
+        return res.send(`
+          <html>
+            <body>
+              <h1>Error: Access token not received</h1>
+              <pre>${JSON.stringify(tokenResponse.data, null, 2)}</pre>
+            </body>
+          </html>
+        `);
+      }
+
+      // Display the access token and response for debugging
+      res.send(`
+        <html>
+          <body>
+            <h1>Access Token Received:</h1>
+            <pre>${accessToken}</pre>
+            <p>Redirecting to profile...</p>
+            <script>
+              // Redirect after a brief delay for debugging
+              setTimeout(function() {
+                window.location.href = '/profile?accessToken=' + '${accessToken}';
+              }, 2000); // Adjust the delay as needed
+            </script>
+          </body>
+        </html>
+      `);
     } catch (error) {
       console.error(error);
       res.redirect('/'); // Redirect in case of an error
