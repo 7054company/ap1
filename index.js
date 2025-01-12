@@ -60,8 +60,11 @@ app.get(
     temporaryCode = req.query.code;
 
     if (!temporaryCode) {
+      console.error('No authorization code received');
       return res.status(400).send('No code received');
     }
+
+    console.log('Received authorization code:', temporaryCode);
 
     next();
   },
@@ -120,11 +123,12 @@ app.get(
         </html>
       `);
     } catch (error) {
-      console.error(error);
+      console.error('Error during token exchange:', error);
       res.redirect('/'); // Redirect in case of an error
     }
   }
 );
+
 
 // Profile route to display authenticated user info
 app.get('/profile', async (req, res) => {
